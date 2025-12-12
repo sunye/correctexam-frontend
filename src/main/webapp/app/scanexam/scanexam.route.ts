@@ -20,6 +20,8 @@ import { MarkingSummaryComponent } from './marking-summary/marking-summary.compo
 import { ComparestudentanswerComponent } from './comparestudentanswer/comparestudentanswer.component';
 
 import { ExportanonymoupdfComponent } from './exportanonymoupdf/exportanonymoupdf.component';
+import { CreerexamComponentNbGrader } from './creerexamnbgrader/creerexamnbgrader.component';
+import { AssocierNbgraderComponent } from './associer-copies-etudiants/associer-nbgrader/associer-nbgrader.component';
 
 // set the location of the OpenCV files
 // registerAllModules();
@@ -119,6 +121,20 @@ export const CREEREXAM_ROUTE: Route = {
   },
 };
 
+export const CREEREXAMNBGRADER_ROUTE: Route = {
+  path: 'creerexamnbgrader/:courseid',
+  canActivate: [UserRouteAccessService],
+  component: CreerexamComponentNbGrader,
+  data: {
+    authorities: ['ROLE_USER'],
+    pageTitle: 'home.creerexamnbgrader',
+    documentation: {
+      en: 'https://correctexam.readthedocs.io/en/latest/user.html#step-1-create-your-course-and-exam-this-includes-creating-your-exam-using-a-word-processor-word-google-doc-libreoffice-or-latex',
+      fr: 'https://correctexam.readthedocs.io/fr/latest/user.html#etape-1-creer-son-cours-et-son-examen-cela-comprend-fabriquer-l-enonce-de-son-examen-a-l-aide-d-un-traitement-de-texte-word-google-doc-libreoffice-ou-de-latex',
+    },
+  },
+};
+
 export const CHARGERSCAN_ROUTE: Route = {
   path: 'loadscan/:examid',
   canActivate: [UserRouteAccessService],
@@ -175,20 +191,6 @@ export const AlignerCopiesEtudiants_ROUTE: Route = {
   },
 };
 
-export const AssocierCopiesEtudiants_ROUTE: Route = {
-  path: 'studentbindings/:examid',
-  canActivate: [UserRouteAccessService],
-  component: AssocierCopiesEtudiantsComponent,
-  data: {
-    authorities: ['ROLE_USER'],
-    pageTitle: 'home.studentbindings',
-    documentation: {
-      en: 'https://correctexam.readthedocs.io/en/latest/user.html#step-5-associate-each-copy-with-a-student-ai-assisted',
-      fr: 'https://correctexam.readthedocs.io/fr/latest/user.html#etape-5-associer-chaque-copie-avec-un-etudiant-assistee-a-l-aide-de-l-ia',
-    },
-  },
-};
-
 export const MarkingSummary_ROUTE: Route = {
   path: 'marking-summary/:examid',
   canActivate: [UserRouteAccessService],
@@ -231,10 +233,53 @@ export const ImageAccess_ROUTE: Route = {
   },
 };
 */
+
+export const AssocierCopiesEtudiants_ROUTE: Route = {
+  path: 'studentbindings/:examid',
+  canActivate: [UserRouteAccessService],
+  component: AssocierCopiesEtudiantsComponent,
+  data: {
+    authorities: ['ROLE_USER'],
+    pageTitle: 'home.studentbindings',
+    documentation: {
+      en: 'https://correctexam.readthedocs.io/en/latest/user.html#step-5-associate-each-copy-with-a-student-ai-assisted',
+      fr: 'https://correctexam.readthedocs.io/fr/latest/user.html#etape-5-associer-chaque-copie-avec-un-etudiant-assistee-a-l-aide-de-l-ia',
+    },
+  },
+};
+
 export const AssocierCopiesEtudiantsToStudent_ROUTE: Route = {
   path: 'studentbindings/:examid/:currentStudent',
   canActivate: [UserRouteAccessService],
   component: AssocierCopiesEtudiantsComponent,
+  data: {
+    authorities: ['ROLE_USER'],
+    pageTitle: 'home.studentbindings',
+    documentation: {
+      en: 'https://correctexam.readthedocs.io/en/latest/user.html#step-5-associate-each-copy-with-a-student-ai-assisted',
+      fr: 'https://correctexam.readthedocs.io/fr/latest/user.html#etape-5-associer-chaque-copie-avec-un-etudiant-assistee-a-l-aide-de-l-ia',
+    },
+  },
+};
+
+export const AssocierNbgrader_ROUTE: Route = {
+  path: 'studentbindingsnbgrader/:examid',
+  canActivate: [UserRouteAccessService],
+  component: AssocierNbgraderComponent,
+  data: {
+    authorities: ['ROLE_USER'],
+    pageTitle: 'home.studentbindings',
+    documentation: {
+      en: 'https://correctexam.readthedocs.io/en/latest/user.html#step-5-associate-each-copy-with-a-student-ai-assisted',
+      fr: 'https://correctexam.readthedocs.io/fr/latest/user.html#etape-5-associer-chaque-copie-avec-un-etudiant-assistee-a-l-aide-de-l-ia',
+    },
+  },
+};
+
+export const AssocierNbgraderToStudent_ROUTE: Route = {
+  path: 'studentbindingsnbgrader/:examid/:currentStudent',
+  canActivate: [UserRouteAccessService],
+  component: AssocierNbgraderComponent,
   data: {
     authorities: ['ROLE_USER'],
     pageTitle: 'home.studentbindings',
@@ -397,6 +442,7 @@ export const SCANEXAM_ROUTES = [
   COURSMAIN_ROUTE,
   REGISTERSTUDENT_ROUTE,
   CREEREXAM_ROUTE,
+  CREEREXAMNBGRADER_ROUTE,
   EXAMDETAIL_ROUTE,
   ANNOTATETEMPLATE_ROUTE,
   CHARGERSCAN_ROUTE,
@@ -418,4 +464,6 @@ export const SCANEXAM_ROUTES = [
   EXPORTPDF_ROUTE,
   EXPORTPDFBYSHEET_ROUTE,
   CompareHybridCommentAnswer_ROUTE,
+  AssocierNbgrader_ROUTE,
+  AssocierNbgraderToStudent_ROUTE,
 ];

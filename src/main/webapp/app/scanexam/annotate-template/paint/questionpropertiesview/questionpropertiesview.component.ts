@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/member-ordering */
 
 import { HttpResponse } from '@angular/common/http';
-import { Component, OnInit, EventEmitter, Output, Input } from '@angular/core';
+import { Component, OnInit, EventEmitter, Output, Input, signal } from '@angular/core';
 import { UntypedFormBuilder, Validators, UntypedFormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { IQuestionType } from 'app/entities/question-type/question-type.model';
 import { QuestionTypeService } from 'app/entities/question-type/service/question-type.service';
@@ -17,7 +17,7 @@ import { ITextComment } from 'app/entities/text-comment/text-comment.model';
 import { IGradedComment } from 'app/entities/graded-comment/graded-comment.model';
 import { IHybridGradedComment } from 'app/entities/hybrid-graded-comment/hybrid-graded-comment.model';
 import { ZoneService } from 'app/entities/zone/service/zone.service';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateDirective, TranslatePipe } from '@ngx-translate/core';
 import { Button } from 'primeng/button';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { CheckboxModule } from 'primeng/checkbox';
@@ -27,9 +27,8 @@ import { KnobModule } from 'primeng/knob';
 import { ListboxModule } from 'primeng/listbox';
 import { InputTextModule } from 'primeng/inputtext';
 import { TooltipModule } from 'primeng/tooltip';
-import { TranslateDirective } from '../../../../shared/language/translate.directive';
 import { AlertErrorComponent } from '../../../../shared/alert/alert-error.component';
-import { NgIf, NgFor } from '@angular/common';
+
 import { CreateCommentsComponent } from '../../create-comments/create-comments.component';
 import { DrawerModule } from 'primeng/drawer';
 
@@ -62,14 +61,11 @@ export type EntityResponseType = HttpResponse<IQuestion>;
   imports: [
     DrawerModule,
     CreateCommentsComponent,
-    NgIf,
     FormsModule,
     ReactiveFormsModule,
     AlertErrorComponent,
-    TranslateDirective,
     TooltipModule,
     InputTextModule,
-    NgFor,
     ListboxModule,
     KnobModule,
     KeyFilterModule,
@@ -77,14 +73,15 @@ export type EntityResponseType = HttpResponse<IQuestion>;
     CheckboxModule,
     ToggleSwitchModule,
     Button,
-    TranslateModule,
+    TranslateDirective,
+    TranslatePipe,
   ],
 })
 export class QuestionpropertiesviewComponent implements OnInit, OnDestroy {
   /** The selected questions. This is an array since a same question can be divided into several parts.
    * The first question of the array, if not empty, is the truely selected question. An empty array means no selection. */
   public questions: Array<IQuestion> = [];
-
+  foo = signal(false);
   @Input()
   public alreadyInASideBar = false;
 
@@ -94,19 +91,19 @@ export class QuestionpropertiesviewComponent implements OnInit, OnDestroy {
   @Input()
   public canUpdateNumero = true;
 
-  public layoutsidebarVisible = false;
+  public layoutsidebarVisible = signal(false);
   public manualid = 2;
   public qcmid = 3;
   public manuscritid = 4;
   readonly hybrid = GradeType.HYBRID;
 
   public disableGradeType: boolean | null = false;
-  public disableNumero: boolean | null = false;
+  /*  public disableNumero: boolean | null = false;
   public disablePoint: boolean | null = false;
   public disableStep: boolean | null = false;
   public disableCanExceed: boolean = false;
   public disableMin0: boolean = false;
-  public disableIgnoreBareme: boolean = false;
+  public disableIgnoreBareme: boolean = false;*/
 
   public forceEdit: boolean = false;
 
@@ -230,17 +227,25 @@ export class QuestionpropertiesviewComponent implements OnInit, OnDestroy {
 
     this.selectionSubscription = this.eventHandler?.getSelectedQuestion().subscribe(selectedQ => {
       this.disableGradeType = null;
-      this.disableNumero = null;
+      this.editForm.get('gradeType')?.enable();
+      this.editForm.get('numero')?.enable();
+      this.editForm.get('point')?.enable();
+      this.editForm.get('step')?.enable();
+      this.editForm.get('canExceedTheMax')?.enable();
+      this.editForm.get('canBeNegative')?.enable();
+      this.editForm.get('mustBeIgnoreInGlobalScale')?.enable();
+      /*       this.disableNumero = null;
       this.disablePoint = null;
       this.disableStep = null;
       this.disableCanExceed = false;
       this.disableMin0 = false;
-      this.disableIgnoreBareme = false;
+      this.disableIgnoreBareme = false;*/
 
       this.forceEdit = false;
 
       if (selectedQ === undefined) {
         this.questions = [];
+        this.foo.set(false);
       } else {
         this.updateQuestions(selectedQ.id!, selectedQ.examId!, selectedQ.numero!);
       }
@@ -248,6 +253,8 @@ export class QuestionpropertiesviewComponent implements OnInit, OnDestroy {
 
     if (this.questionsInput.length > 0) {
       this.questions = this.questionsInput;
+      this.foo.set(true);
+
       this.updateForm();
     }
   }
@@ -262,7 +269,10 @@ export class QuestionpropertiesviewComponent implements OnInit, OnDestroy {
       .then(res => {
         this.questions = res;
         if (this.questions.length > 0) {
+          this.foo.set(true);
           this.updateForm();
+        } else {
+          this.foo.set(false);
         }
       });
   }
@@ -277,32 +287,54 @@ export class QuestionpropertiesviewComponent implements OnInit, OnDestroy {
       firstValueFrom(this.zoneService.countStudentResponseForZone(question.zoneId)).then(count => {
         if (count.body! > 0 && !this.forceEdit) {
           this.disableGradeType = true;
-          this.disableNumero = true;
+          this.editForm.get('gradeType')?.disable();
+
+          //          this.disableNumero = true;
+          this.editForm.get('numero')?.disable();
 
           if (question.typeId !== this.qcmid) {
-            this.disableStep = true;
+            //            this.disableStep = true;
+            this.editForm.get('step')?.disable();
 
             if (question.gradeType === GradeType.DIRECT) {
-              this.disablePoint = true;
+              //              this.disablePoint = true;
+              this.editForm.get('point')?.disable();
             } else if (question.gradeType === GradeType.HYBRID) {
-              this.disablePoint = true;
-              this.disableCanExceed = true;
-              this.disableMin0 = true;
-              this.disableIgnoreBareme = true;
+              this.editForm.get('point')?.disable();
+              //              this.disablePoint = true;
+              this.editForm.get('canExceedTheMax')?.disable();
+              //              this.disableCanExceed = true;
+              this.editForm.get('canBeNegative')?.disable();
+
+              //              this.disableMin0 = true;
+              //              this.disableIgnoreBareme = true;
+              this.editForm.get('mustBeIgnoreInGlobalScale')?.disable();
             } else {
-              this.disablePoint = true;
+              this.editForm.get('point')?.disable();
+
+              //              this.disablePoint = true;
             }
           } else {
-            this.disableStep = false;
+            this.editForm.get('step')?.enable();
+
+            //            this.disableStep = false;
           }
         } else {
           this.disableGradeType = false;
-          this.disableNumero = false;
+          this.editForm.get('gradeType')?.enable();
+          this.editForm.get('numero')?.enable();
+          this.editForm.get('point')?.enable();
+          this.editForm.get('step')?.enable();
+          this.editForm.get('canExceedTheMax')?.enable();
+          this.editForm.get('canBeNegative')?.enable();
+          this.editForm.get('mustBeIgnoreInGlobalScale')?.enable();
+
+          /*         this.disableNumero = false;
           this.disableStep = false;
           this.disablePoint = false;
           this.disableCanExceed = false;
           this.disableMin0 = false;
-          this.disableIgnoreBareme = false;
+          this.disableIgnoreBareme = false;*/
         }
       });
     }
@@ -523,12 +555,20 @@ export class QuestionpropertiesviewComponent implements OnInit, OnDestroy {
   changeForceEdit(): void {
     if (this.forceEdit) {
       this.disableGradeType = false;
+      this.editForm.get('gradeType')?.enable();
+      this.editForm.get('numero')?.enable();
+      this.editForm.get('point')?.enable();
+      this.editForm.get('step')?.enable();
+      this.editForm.get('canExceedTheMax')?.enable();
+      this.editForm.get('canBeNegative')?.enable();
+      this.editForm.get('mustBeIgnoreInGlobalScale')?.enable();
+      /*
       this.disableNumero = false;
       this.disablePoint = false;
       this.disableStep = false;
       this.disableCanExceed = false;
       this.disableMin0 = false;
-      this.disableIgnoreBareme = false;
+      this.disableIgnoreBareme = false;*/
     } else {
       this.updateForm();
     }
@@ -536,6 +576,6 @@ export class QuestionpropertiesviewComponent implements OnInit, OnDestroy {
 
   editComment($event: MouseEvent): void {
     $event.preventDefault();
-    this.layoutsidebarVisible = true;
+    this.layoutsidebarVisible.set(true);
   }
 }

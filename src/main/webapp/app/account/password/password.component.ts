@@ -5,16 +5,15 @@ import { Observable } from 'rxjs';
 import { AccountService } from 'app/core/auth/account.service';
 import { Account } from 'app/core/auth/account.model';
 import { PasswordService } from './password.service';
-import { TranslateModule } from '@ngx-translate/core';
 import { PasswordStrengthBarComponent } from './password-strength-bar/password-strength-bar.component';
-import { TranslateDirective } from '../../shared/language/translate.directive';
-import { NgIf, AsyncPipe } from '@angular/common';
+import { AsyncPipe } from '@angular/common';
+import { TranslateDirective, TranslatePipe, TranslateService } from '@ngx-translate/core';
 
 @Component({
   selector: 'jhi-password',
   templateUrl: './password.component.html',
   standalone: true,
-  imports: [NgIf, TranslateDirective, FormsModule, ReactiveFormsModule, PasswordStrengthBarComponent, AsyncPipe, TranslateModule],
+  imports: [FormsModule, ReactiveFormsModule, PasswordStrengthBarComponent, AsyncPipe, TranslateDirective, TranslatePipe],
 })
 export class PasswordComponent implements OnInit {
   doNotMatch = false;
@@ -27,6 +26,7 @@ export class PasswordComponent implements OnInit {
     private passwordService: PasswordService,
     private accountService: AccountService,
     private fb: UntypedFormBuilder,
+    private translateService: TranslateService,
   ) {
     this.passwordForm = this.fb.group({
       currentPassword: ['', [Validators.required]],
@@ -37,6 +37,11 @@ export class PasswordComponent implements OnInit {
 
   ngOnInit(): void {
     this.account$ = this.accountService.identity();
+    this.account$.subscribe(account => {
+      if (account?.langKey) {
+        this.translateService.use(account.langKey);
+      }
+    });
   }
 
   changePassword(): void {

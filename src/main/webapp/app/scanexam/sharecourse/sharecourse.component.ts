@@ -3,8 +3,8 @@ import { Component, OnInit } from '@angular/core';
 import { ApplicationConfigService } from 'app/core/config/application-config.service';
 import { DynamicDialogRef, DynamicDialogConfig } from 'primeng/dynamicdialog';
 import { UserService } from '../../entities/user/user.service';
-import { TranslateModule } from '@ngx-translate/core';
-import { NgIf } from '@angular/common';
+import { TranslateDirective } from '@ngx-translate/core';
+
 import { PrimeTemplate } from 'primeng/api';
 import { PickListModule } from 'primeng/picklist';
 
@@ -13,7 +13,7 @@ import { PickListModule } from 'primeng/picklist';
   templateUrl: './sharecourse.component.html',
   styleUrls: ['./sharecourse.component.scss'],
   standalone: true,
-  imports: [PickListModule, PrimeTemplate, NgIf, TranslateModule],
+  imports: [PickListModule, PrimeTemplate, TranslateDirective],
 })
 export class SharecourseComponent implements OnInit {
   courseid = '';

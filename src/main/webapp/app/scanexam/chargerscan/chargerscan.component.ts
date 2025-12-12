@@ -8,7 +8,7 @@ import { HttpEvent, HttpEventType, HttpProgressEvent, HttpResponse } from '@angu
 import { Component, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { Validators, UntypedFormBuilder, UntypedFormGroup, FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { TranslateService, TranslateModule } from '@ngx-translate/core';
+import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { DataUtils } from 'app/core/util/data-util.service';
 import { EventManager } from 'app/core/util/event-manager.service';
 import { ExamService } from 'app/entities/exam/service/exam.service';
@@ -38,8 +38,7 @@ import { FileUpload, FileUploadModule } from 'primeng/fileupload';
 import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { FaIconComponent } from '@fortawesome/angular-fontawesome';
 import { TooltipModule } from 'primeng/tooltip';
-import { TranslateDirective } from '../../shared/language/translate.directive';
-import { NgIf } from '@angular/common';
+
 import { ProgressBarModule } from 'primeng/progressbar';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { BlockUIModule } from 'primeng/blockui';
@@ -92,8 +91,6 @@ const calculateState = (upload: Upload, event: HttpEvent<unknown>): Upload => {
     BlockUIModule,
     ProgressSpinnerModule,
     ProgressBarModule,
-    NgIf,
-    TranslateDirective,
     TooltipModule,
     FaIconComponent,
     ToggleSwitchModule,
@@ -101,9 +98,9 @@ const calculateState = (upload: Upload, event: HttpEvent<unknown>): Upload => {
     FileUploadModule,
     ViewandreorderpagesComponent,
     NgxExtendedPdfViewerModule,
-    TranslateModule,
     ButtonModule,
     DrawerModule,
+    TranslatePipe,
   ],
 })
 export class ChargerscanComponent implements OnInit, OnDestroy {
@@ -209,6 +206,7 @@ export class ChargerscanComponent implements OnInit, OnDestroy {
     private titleService: Title,
     private pdfNotificationService: PDFNotificationService,
   ) {
+    //    pdfDefaultOptions.assetsFolder = 'bleeding-edge';
     this.editForm = this.fb.group({
       content: [],
       contentContentType: [null, [Validators.required]],
@@ -228,7 +226,6 @@ export class ChargerscanComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.blob = undefined;
     this.blob1 = undefined;
-    this.blob2 = undefined;
     this.activatedRoute.paramMap.subscribe(params => {
       if (params.get('examid') !== null) {
         this.examid = params.get('examid')!;
@@ -440,22 +437,31 @@ export class ChargerscanComponent implements OnInit, OnDestroy {
         this.firstPageToLoad = await this.db.countNonAlignImage(+this.examid!);
       }
       const e1 = await firstValueFrom(this.templateService.getPdf(this.exam.templateId));
-      this.blob1 = e1;
       this.loaded = true;
+      this.showPdfViewer = true;
+      setTimeout(() => (this.blob1 = e1), 500);
     }
   }
+
   i = 1;
   processLastPage = true;
+  firstEventFire = false;
+
+  showPdfViewer = false;
+
   async doProcessLastPage(): Promise<void> {
     this.processLastPage = true;
     await this.process();
   }
+
   async doNotProcessLastPage(): Promise<void> {
     this.processLastPage = false;
     await this.process();
   }
+
   public async pdfloaded(): Promise<void> {
-    if (this.loaded && this.pdfService.numberOfPages() !== 0) {
+    if (!this.firstEventFire && this.loaded && this.pdfService.numberOfPages() !== 0) {
+      this.firstEventFire = true;
       if (!this.phase1) {
         this.nbreFeuilleParCopie = this.pdfService.numberOfPages();
         if (this.nbreFeuilleParCopie >= 3 && this.nbreFeuilleParCopie % 2 !== 0) {
@@ -485,11 +491,9 @@ export class ChargerscanComponent implements OnInit, OnDestroy {
 
   blob: any;
   blob1: any;
-  blob2: any;
 
   async process(): Promise<void> {
     this.translateService.get('scanexam.processingencours').subscribe(res => (this.message = '' + res));
-
     this.blocked = true;
     this.currentPageAlignOver = 1;
     this.avancement = 0;
@@ -500,9 +504,19 @@ export class ChargerscanComponent implements OnInit, OnDestroy {
           this.phase1 = true;
           if (this.exam.scanfileId) {
             if (this.blob !== undefined) {
-              this.blob1 = this.blob;
+              setTimeout(async () => {
+                if (this.exam.scanfileId) {
+                  this.firstEventFire = false;
+                  this.blob1 = this.blob;
+                }
+              }, 200);
             } else {
-              this.blob1 = await firstValueFrom(this.scanService.getPdf(this.exam.scanfileId));
+              setTimeout(async () => {
+                if (this.exam.scanfileId) {
+                  this.firstEventFire = false;
+                  this.blob1 = await firstValueFrom(this.scanService.getPdf(this.exam.scanfileId!));
+                }
+              }, 200);
             }
           }
         }
@@ -562,6 +576,17 @@ export class ChargerscanComponent implements OnInit, OnDestroy {
       this.loaded = false;
       this.i = 1;
       this.phase1 = false;
+      this.firstEventFire = false;
+      this.blob1 = undefined;
+      this.blob = undefined;
+      const PDFViewerApplication: IPDFViewerApplication = this.pdfNotificationService.onPDFJSInitSignal();
+      if (PDFViewerApplication) {
+        await PDFViewerApplication.unbindEvents();
+        await PDFViewerApplication.unbindWindowEvents();
+        await PDFViewerApplication._cleanup();
+        await PDFViewerApplication.close();
+        this.showPdfViewer = false;
+      }
     }
   }
 

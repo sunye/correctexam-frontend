@@ -6,7 +6,7 @@ import dayjs from 'dayjs';
 
 import { AccountService } from 'app/core/auth/account.service';
 import { FocusViewService } from '../profiles/focusview.service';
-import { CommonModule, NgIf, registerLocaleData } from '@angular/common';
+import { registerLocaleData } from '@angular/common';
 import { KeyboardShortcutsModule } from 'ng-keyboard-shortcuts';
 import { FooterComponent } from '../footer/footer.component';
 import { FaIconLibrary, FontAwesomeModule } from '@fortawesome/angular-fontawesome';
@@ -18,7 +18,7 @@ import { ButtonModule } from 'primeng/button';
 
 @Component({
   standalone: true,
-  imports: [CommonModule, NgIf, RouterOutlet, KeyboardShortcutsModule, FooterComponent, FontAwesomeModule, ButtonModule],
+  imports: [RouterOutlet, KeyboardShortcutsModule, FooterComponent, FontAwesomeModule, ButtonModule],
 
   selector: 'jhi-main',
   templateUrl: './main.component.html',
@@ -58,7 +58,11 @@ export class MainComponent implements OnInit {
 
   ngOnInit(): void {
     // try to log in automatically
-    this.accountService.identity().subscribe();
+    this.accountService.identity().subscribe(account => {
+      if (account?.langKey) {
+        this.translateService.use(account.langKey);
+      }
+    });
     this.focusViewService.registerFocusView().subscribe((b: boolean) => {
       this.focusview = b;
     });

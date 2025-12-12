@@ -12,12 +12,11 @@ import { ExamService } from '../../entities/exam/service/exam.service';
 import { TemplateService } from '../../entities/template/service/template.service';
 import { ITemplate, Template } from '../../entities/template/template.model';
 import { HttpResponse } from '@angular/common/http';
-import { TranslateService } from '@ngx-translate/core';
+import { TranslateDirective, TranslateService } from '@ngx-translate/core';
 import { Title } from '@angular/platform-browser';
 import { NgxExtendedPdfViewerModule } from 'ngx-extended-pdf-viewer';
-import { NgIf } from '@angular/common';
+
 import { FaIconComponent } from '@fortawesome/angular-fontawesome';
-import { TranslateDirective } from '../../shared/language/translate.directive';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { BlockUIModule } from 'primeng/blockui';
 import { ToastModule } from 'primeng/toast';
@@ -36,7 +35,6 @@ import { ToastModule } from 'primeng/toast';
     FaIconComponent,
     FormsModule,
     ReactiveFormsModule,
-    NgIf,
     NgxExtendedPdfViewerModule,
   ],
 })
@@ -134,7 +132,6 @@ export class CreerexamComponent implements OnInit, AfterViewInit {
     template.mark = this.editForm.get(['mark'])!.value;
     template.autoMapStudentCopyToList = true;
     template.caseboxname = this.editForm.get(['caseBoxName'])!.value ? this.editForm.get(['caseBoxName'])!.value : true;
-    console.error(template.caseboxname);
 
     this.templateService.create(template).subscribe({
       next: (res: HttpResponse<ITemplate>) => {
@@ -142,6 +139,7 @@ export class CreerexamComponent implements OnInit, AfterViewInit {
         exam.name = this.editForm.get(['name'])!.value;
         exam.templateId = res.body?.id;
         exam.courseId = +this.courseid!;
+        exam.nbgrader = false;
         this.examService.create(exam).subscribe({
           next: () => {
             this.isSaving = false;

@@ -2,22 +2,33 @@
   [source]="list1"
   [target]="list2"
   [responsive]="true"
-  [sourceHeader]="'scanexam.profdispo' | translate"
-  [targetHeader]="'scanexam.profshared' | translate"
   [dragdrop]="true"
   [showSourceControls]="false"
   [showTargetControls]="false"
-  filterBy="name,firstname,login"
+  showSourceFilter="true"
+  [filterBy]="'login,firstname,name'"
   [stripedRows]="true"
   (onMoveToTarget)="moveToTarget($event)"
   (onMoveToSource)="moveToSource($event)"
   (onMoveAllToTarget)="moveToTarget($event)"
   (onMoveAllToSource)="moveToSource($event)"
 >
+  <ng-template pTemplate="sourceHeader">
+    <span style="font-weight: bold" [translate]="'scanexam.profdispo'"> </span>
+  </ng-template>
+  <ng-template pTemplate="targetHeader">
+    <span style="font-weight: bold" [translate]="'scanexam.profshared'"> </span>
+  </ng-template>
   <ng-template let-user pTemplate="item">
     <div>
-      {{ user.login }} (<span *ngIf="user.name">{{ user.name }}</span> <span *ngIf="user.firstname">{{ user.firstname }}</span
-      >)
+      {{ user.login }} (
+      @if (user.name) {
+        <span>{{ user.name }}</span>
+      }
+      @if (user.firstname) {
+        <span>{{ user.firstname }}</span>
+      }
+      )
     </div>
   </ng-template>
 </p-pickList>

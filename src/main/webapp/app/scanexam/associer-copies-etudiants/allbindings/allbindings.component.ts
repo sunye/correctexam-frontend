@@ -6,10 +6,9 @@ import { DynamicDialogConfig, DynamicDialogRef } from 'primeng/dynamicdialog';
 import { ExamSheetService } from '../../../entities/exam-sheet/service/exam-sheet.service';
 import { firstValueFrom } from 'rxjs';
 import { StudentService } from 'app/entities/student/service/student.service';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateDirective, TranslatePipe } from '@ngx-translate/core';
 import { TooltipModule } from 'primeng/tooltip';
-import { TranslateDirective } from '../../../shared/language/translate.directive';
-import { NgIf, NgClass, DecimalPipe } from '@angular/common';
+import { NgClass, DecimalPipe } from '@angular/common';
 import { PrimeTemplate } from 'primeng/api';
 import { TableModule } from 'primeng/table';
 
@@ -18,7 +17,7 @@ import { TableModule } from 'primeng/table';
   templateUrl: './allbindings.component.html',
   styleUrls: ['./allbindings.component.scss'],
   standalone: true,
-  imports: [TableModule, PrimeTemplate, NgIf, TranslateDirective, NgClass, TooltipModule, DecimalPipe, TranslateModule],
+  imports: [TableModule, PrimeTemplate, NgClass, TooltipModule, DecimalPipe, TranslateDirective, TranslatePipe],
 })
 export class AllbindingsComponent implements OnInit {
   students: any[] = [];
@@ -28,6 +27,7 @@ export class AllbindingsComponent implements OnInit {
   showName = true;
   showFirstname = true;
   showIne = true;
+  showNbName = false;
   nobutton = false;
 
   constructor(
@@ -65,8 +65,8 @@ export class AllbindingsComponent implements OnInit {
         this.showName = students[0].nameImage !== undefined;
         this.showFirstname = students[0].firstnameImage !== undefined;
         this.showIne = students[0].ineImage !== undefined;
+        this.showNbName = students[0].nbName !== undefined;
         const length = imgs.filter(e => e !== undefined).length;
-        //      console.error(length);
         if (length > 1) {
           this.columnstyle = { width: Math.floor(75 / length) + '%' };
         } else {

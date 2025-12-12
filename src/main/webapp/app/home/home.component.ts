@@ -9,7 +9,7 @@ import { Account } from 'app/core/auth/account.model';
 
 import { faPlus } from '@fortawesome/free-solid-svg-icons';
 import { ApplicationConfigService } from '../core/config/application-config.service';
-import { TranslateService, TranslateModule } from '@ngx-translate/core';
+import { TranslateService, TranslatePipe, TranslateDirective } from '@ngx-translate/core';
 import { LoginService } from 'app/login/login.service';
 
 import { CONNECTION_METHOD, CAS_SERVER_URL, SERVICE_URL } from 'app/app.constants';
@@ -24,9 +24,10 @@ import { ToggleSwitchModule } from 'primeng/toggleswitch';
 import { TooltipModule } from 'primeng/tooltip';
 import { DrawerModule } from 'primeng/drawer';
 import { HasAnyAuthorityDirective } from '../shared/auth/has-any-authority.directive';
-import { TranslateDirective } from '../shared/language/translate.directive';
-import { NgIf } from '@angular/common';
+
 import { ButtonModule } from 'primeng/button';
+import { ExamService } from 'app/entities/exam/service/exam.service';
+import { CacheServiceImpl } from 'app/scanexam/db/CacheServiceImpl';
 
 interface Upload {
   progress: number;
@@ -66,7 +67,7 @@ const calculateState = (upload: Upload, event: HttpEvent<unknown>): Upload => {
   styleUrls: ['./home.component.scss'],
   standalone: true,
   imports: [
-    NgIf,
+    TranslatePipe,
     TranslateDirective,
     RouterLink,
     HasAnyAuthorityDirective,
@@ -79,7 +80,6 @@ const calculateState = (upload: Upload, event: HttpEvent<unknown>): Upload => {
     DockModule,
     PrimeTemplate,
     MesCoursComponent_1,
-    TranslateModule,
   ],
 })
 export class HomeComponent implements OnInit, OnDestroy {
@@ -119,6 +119,8 @@ export class HomeComponent implements OnInit, OnDestroy {
     private loginService: LoginService,
     private zone: NgZone,
     private http: HttpClient,
+    private examService: ExamService,
+    private db: CacheServiceImpl,
   ) {}
 
   ngOnInit(): void {
@@ -155,14 +157,26 @@ export class HomeComponent implements OnInit, OnDestroy {
     this.accountService
       .getAuthenticationState()
       .pipe(takeUntil(this.destroy$))
-      .subscribe(account => (this.account = account));
+      .subscribe(account => {
+        this.account = account;
+        if (account) {
+          this.examService.query().subscribe(res => {
+            if (res.body) {
+              const examIds = res.body.map(exam => (exam.id ? exam.id : 0));
+              this.db.cleanOutDatedCached(examIds).then(() => {
+                console.log('cleanOutDatedCached done');
+              });
+            }
+          });
+        }
+      });
 
     this.translateService.get('home.creercours').subscribe(() => {
       this.initCmpt();
     });
-    this.translateService.onLangChange.subscribe(() => {
+    /* this.translateService.onLangChange.subscribe(() => {
       this.initCmpt();
-    });
+    });*/
   }
 
   initCmpt(): void {

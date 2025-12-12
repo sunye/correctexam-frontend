@@ -220,7 +220,6 @@ export class CacheUploadService {
       .subscribe(res => cacheUploadNotification.setMessage('' + res + ' Part ' + part + '/' + nbrPart));
     try {
       const value = await this.db.export(examId, o);
-
       const file = new File([value], filename);
 
       cacheUploadNotification.setProgress(0);
@@ -317,7 +316,6 @@ export class CacheUploadService {
       let data: Blob = (await firstValueFrom(this.getCache(examId + 'indexdb.json'))) as Blob;
       if (data.size === 0) {
         data = await firstValueFrom(this.getCache(examId + '_exam_template_indexdb.json'));
-
         if (data.size === 0) {
           if (showFailMessage) {
             messageService.add({

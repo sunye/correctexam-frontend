@@ -21,7 +21,7 @@ import { ApplicationConfigService } from 'app/core/config/application-config.ser
 import { AccountService } from '../../core/auth/account.service';
 import { MessageService } from 'primeng/api';
 import { CacheDownloadNotification, CacheUploadNotification, CacheUploadService } from './cacheUpload.service';
-import { TranslateService, TranslateModule } from '@ngx-translate/core';
+import { TranslateService, TranslateDirective, TranslatePipe } from '@ngx-translate/core';
 import { CacheServiceImpl } from '../db/CacheServiceImpl';
 import { firstValueFrom } from 'rxjs';
 import { PreferenceService } from '../preference-page/preference.service';
@@ -33,11 +33,10 @@ import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { BlockUIModule } from 'primeng/blockui';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { TooltipModule } from 'primeng/tooltip';
-import { CommonModule, NgIf } from '@angular/common';
+
 import { DockModule } from 'primeng/dock';
 import { ButtonDirective } from 'primeng/button';
 import { FormsModule } from '@angular/forms';
-import { TranslateDirective } from '../../shared/language/translate.directive';
 import { DialogModule } from 'primeng/dialog';
 import { ToastModule } from 'primeng/toast';
 
@@ -48,14 +47,11 @@ import { ToastModule } from 'primeng/toast';
   providers: [ConfirmationService, MessageService],
   standalone: true,
   imports: [
-    CommonModule,
     ToastModule,
     DialogModule,
-    TranslateDirective,
     FormsModule,
     PrimeTemplate,
     ButtonDirective,
-    NgIf,
     RouterLink,
     TooltipModule,
     ConfirmDialogModule,
@@ -65,7 +61,8 @@ import { ToastModule } from 'primeng/toast';
     FaStackComponent,
     FaIconComponent,
     FaStackItemSizeDirective,
-    TranslateModule,
+    TranslateDirective,
+    TranslatePipe,
     DockModule,
   ],
 })
@@ -160,34 +157,51 @@ export class ExamDetailComponent implements OnInit, CacheUploadNotification, Cac
               this.router.navigateByUrl('/');
             },
           );
+          if (this.exam.nbgrader === true) {
+            this.db.countAlignImage(+this.examId).then(c1 => {
+              if (c1 !== 0) {
+                this.showAlignement = true;
+                this.showAssociation = true;
+                this.showCorrection = true;
+              } else {
+                this.cacheUploadService.importCache(+this.examId, this.translateService, this.messageService, this, false);
+              }
+              this.blocked = false;
+            });
+          } else {
+            this.db.countPageTemplate(+this.examId).then(c => {
+              if (c !== 0) {
+                this.blocked = true;
+                this.db.countNonAlignImage(+this.examId).then(c1 => {
+                  if (c1 !== 0) {
+                    this.showAlignement = true;
 
-          this.db.countPageTemplate(+this.examId).then(c => {
-            if (c !== 0) {
-              this.blocked = true;
-              this.db.countNonAlignImage(+this.examId).then(c1 => {
-                if (c1 !== 0) {
-                  this.showAlignement = true;
-
-                  this.checkIfAlreadyAlign().then(res => {
-                    if (res && this.exam?.scanfileId) {
-                      this.showAssociation = true;
-                      this.initTemplate();
-                    } else {
-                      this.blocked = false;
-                    }
-                  });
+                    this.checkIfAlreadyAlign().then(res => {
+                      if (res && this.exam?.scanfileId) {
+                        this.showAssociation = true;
+                        this.checkNewCacheAvailable().then(res1 => {
+                          this.initTemplate();
+                          if (res1) {
+                            this.confirmDownloadNewCache();
+                          }
+                        });
+                      } else {
+                        this.blocked = false;
+                      }
+                    });
+                  } else {
+                    this.blocked = false;
+                  }
+                });
+              } else {
+                if (this.exam?.scanfileId) {
+                  this.cacheUploadService.importCache(+this.examId, this.translateService, this.messageService, this, true);
                 } else {
                   this.blocked = false;
                 }
-              });
-            } else {
-              if (this.exam?.scanfileId) {
-                this.cacheUploadService.importCache(+this.examId, this.translateService, this.messageService, this, false);
-              } else {
-                this.blocked = false;
               }
-            }
-          });
+            });
+          }
         });
 
         this.translateService.get('scanexam.removeexam').subscribe(() => {
@@ -199,6 +213,14 @@ export class ExamDetailComponent implements OnInit, CacheUploadNotification, Cac
         });
       }
     });
+  }
+
+  async checkNewCacheAvailable(): Promise<boolean> {
+    const p = await this.db.getExamTimestamp(+this.examId);
+    const localts = p !== undefined ? p : 0;
+    const s = await firstValueFrom(this.examService.getExamTimestamp(+this.examId));
+    const serverts = s.body !== undefined ? s.body : 0;
+    return serverts > localts;
   }
 
   async checkIfAlreadyAlign(): Promise<boolean> {
@@ -300,10 +322,12 @@ export class ExamDetailComponent implements OnInit, CacheUploadNotification, Cac
       this.confirmationService.confirm({
         message: data,
         accept: () => {
+          this.blocked = true;
           this.examService.delete(this.exam!.id!).subscribe(() => {
             this.db
               .removeElementForExam(+this.examId)
               .then(() => {
+                this.blocked = false;
                 this.router.navigateByUrl('/course/' + this.course!.id);
               })
               .catch(() => {
@@ -359,6 +383,21 @@ export class ExamDetailComponent implements OnInit, CacheUploadNotification, Cac
     this.progress = v;
   }
 
+  confirmDownloadNewCache(): any {
+    this.translateService.get('scanexam.confirmdownloadnewcache').subscribe(data1 => {
+      this.confirmationService.confirm({
+        message: data1,
+        accept: () => {
+          this.blocked = true;
+          this.cacheUploadService.importCache(+this.examId, this.translateService, this.messageService, this, true);
+        },
+        reject: () => {
+          this.blocked = false;
+        },
+      });
+    });
+  }
+
   confirmDownload(): any {
     this.translateService.get('scanexam.confirmdownloadcache').subscribe(data1 => {
       this.confirmationService.confirm({
@@ -366,6 +405,9 @@ export class ExamDetailComponent implements OnInit, CacheUploadNotification, Cac
         accept: () => {
           this.blocked = true;
           this.cacheUploadService.importCache(+this.examId, this.translateService, this.messageService, this, true);
+        },
+        reject: () => {
+          this.blocked = false;
         },
       });
     });

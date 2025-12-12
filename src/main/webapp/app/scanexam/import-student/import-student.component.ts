@@ -1,9 +1,9 @@
 /* eslint-disable @typescript-eslint/member-ordering */
 import { HttpClient } from '@angular/common/http';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { Title } from '@angular/platform-browser';
 import { ActivatedRoute, Router } from '@angular/router';
-import { TranslateService, TranslateModule } from '@ngx-translate/core';
+import { TranslateService, TranslateDirective, TranslatePipe } from '@ngx-translate/core';
 import { ApplicationConfigService } from 'app/core/config/application-config.service';
 import { DataUtils } from 'app/core/util/data-util.service';
 import { ICourse } from 'app/entities/course/course.model';
@@ -19,10 +19,9 @@ import { InputTextModule } from 'primeng/inputtext';
 import { FormsModule } from '@angular/forms';
 import { DialogModule } from 'primeng/dialog';
 import { TooltipModule } from 'primeng/tooltip';
-import { TranslateDirective } from '../../shared/language/translate.directive';
 import { FaIconComponent } from '@fortawesome/angular-fontawesome';
 import { MessageModule } from 'primeng/message';
-import { NgIf, NgClass, NgFor } from '@angular/common';
+import { NgClass } from '@angular/common';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { BlockUIModule } from 'primeng/blockui';
@@ -57,10 +56,8 @@ interface MDWStudent {
     BlockUIModule,
     ProgressSpinnerModule,
     ConfirmDialogModule,
-    NgIf,
     MessageModule,
     FaIconComponent,
-    TranslateDirective,
     TooltipModule,
     NgClass,
     DialogModule,
@@ -69,10 +66,10 @@ interface MDWStudent {
     Button,
     TableModule,
     PrimeTemplate,
-    NgFor,
     InplaceModule,
     FileUploadModule,
-    TranslateModule,
+    TranslateDirective,
+    TranslatePipe,
   ],
 })
 export class ImportStudentComponent implements OnInit {
@@ -80,7 +77,7 @@ export class ImportStudentComponent implements OnInit {
   protected dataset: Std[] = [];
   protected blocked = false;
   protected courseid: string | undefined = undefined;
-  protected students: Std[] = [];
+  protected students = signal<Std[]>([]);
   private course: ICourse | undefined;
   /** The ongoing list of students to process and add */
   private emailsToAdd: string[][] | undefined = undefined;
@@ -333,7 +330,7 @@ export class ImportStudentComponent implements OnInit {
    */
   private getNonEmptyPropValues(prop: keyof Std): string[] {
     // Checking all the inputs together
-    const data = [...this.dataset, ...this.students, this.firstLine];
+    const data = [...this.dataset, ...this.students(), this.firstLine];
     return data.map(e => e[prop]).filter((str): str is string => typeof str === 'string' && str.length > 0);
   }
 
@@ -422,7 +419,7 @@ export class ImportStudentComponent implements OnInit {
 
   loadEtudiants(): void {
     this.http.get<Array<Std>>(this.applicationConfigService.getEndpointFor('api/getstudentcours/' + this.courseid)).subscribe(s => {
-      this.students = s;
+      this.students.update(() => [...s]);
     });
   }
 }

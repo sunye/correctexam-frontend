@@ -15,6 +15,7 @@ export class ExamService {
   protected resourceUrl: string;
   protected resourceUrlCustom: string;
   protected resourceUrlExamStatusFinish: string;
+  protected resourceUrlcreateNoteBookExamStructure: string;
 
   constructor(
     protected http: HttpClient,
@@ -23,6 +24,7 @@ export class ExamService {
     this.resourceUrl = this.applicationConfigService.getEndpointFor('api/exams');
     this.resourceUrlCustom = this.applicationConfigService.getEndpointFor('api/getExamStatus');
     this.resourceUrlExamStatusFinish = this.applicationConfigService.getEndpointFor('api/getExamStatusFinish');
+    this.resourceUrlcreateNoteBookExamStructure = this.applicationConfigService.getEndpointFor('api/createNoteBookExamStructure');
   }
 
   create(exam: IExam): Observable<EntityResponseType> {
@@ -73,6 +75,12 @@ export class ExamService {
     });
   }
 
+  getExamTimestamp(id: number): Observable<HttpResponse<any>> {
+    return this.http.get(this.applicationConfigService.getEndpointFor('api') + '/getCacheTimeStamp' + `/${id}`, {
+      observe: 'response',
+    });
+  }
+
   addExamToCollectionIfMissing(examCollection: IExam[], ...examsToCheck: (IExam | null | undefined)[]): IExam[] {
     const exams: IExam[] = examsToCheck.filter(isPresent);
     if (exams.length > 0) {
@@ -106,6 +114,12 @@ export class ExamService {
    */
   public getExamStatusFinish(examId: number): Promise<boolean> {
     return lastValueFrom(this.http.get<boolean>(`${this.resourceUrlExamStatusFinish}/${examId}`));
+  }
+
+  public createNoteBookExamStructure(examDesc: any): Observable<HttpResponse<void>> {
+    return this.http.post<void>(`${this.resourceUrlcreateNoteBookExamStructure}`, examDesc, {
+      observe: 'response',
+    });
   }
 }
 

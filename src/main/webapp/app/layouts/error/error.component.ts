@@ -6,13 +6,18 @@ import { TranslateService } from '@ngx-translate/core';
 @Component({
   selector: 'jhi-error',
   templateUrl: './error.component.html',
+  standalone: true,
+  imports: [],
 })
 export class ErrorComponent implements OnInit, OnDestroy {
   errorMessage?: string;
   errorKey?: string;
   langChangeSubscription?: Subscription;
 
-  constructor(private translateService: TranslateService, private route: ActivatedRoute) {}
+  constructor(
+    private translateService: TranslateService,
+    private route: ActivatedRoute,
+  ) {}
 
   ngOnInit(): void {
     this.route.data.subscribe(routeData => {

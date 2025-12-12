@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable no-console */
 /* eslint-disable prefer-const */
 /* eslint-disable spaced-comment */
@@ -7,6 +8,7 @@ declare let cv: any;
 import { DoTransferableWorkUnit, runWorker } from 'observable-webworker';
 import { Observable } from 'rxjs';
 import { AlignImage, AppDB, NonAlignImage } from './scanexam/db/db';
+import dayjs from 'dayjs';
 
 interface IImageAlignement {
   imageAligned?: ArrayBuffer;
@@ -48,6 +50,7 @@ export interface IPreference {
   numberofpointToMatch: number;
   numberofgoodpointToMatch: number;
   defaultAlignAlgowithMarker: boolean;
+  warpPerspective: boolean;
 }
 
 let _sqlite3: any;
@@ -218,6 +221,7 @@ export class WorkerPoolAlignWorker implements DoTransferableWorkUnit<IImageAlign
                   input.preference.numberofpointToMatch,
                   input.preference.numberofpointToMatch,
                   input.debug,
+                  input.preference.warpPerspective,
                 );
                 input.imageA = undefined;
 
@@ -228,7 +232,15 @@ export class WorkerPoolAlignWorker implements DoTransferableWorkUnit<IImageAlign
                 console.error(error);
               }
             } else {
-              const res = this.alignImageBasedOnCircle(input.imageA, im1, input.widthA!, input.heightA!, input.preference, input.debug);
+              const res = this.alignImageBasedOnCircle(
+                input.imageA,
+                im1,
+                input.widthA!,
+                input.heightA!,
+                input.preference,
+                input.debug,
+                input.preference.warpPerspective,
+              );
               res.pageNumber = input.pageNumber;
               observer.next(res);
               observer.complete();
@@ -303,8 +315,8 @@ export class WorkerPoolAlignWorker implements DoTransferableWorkUnit<IImageAlign
     allimage: boolean,
     numberofpointToMatch: number,
     numberofgoodpointToMatch: number,
-
     debug: boolean,
+    warpPerspective: boolean,
   ): any {
     const image_A = new ImageData(new Uint8ClampedArray(image_Aba), widthA, heightA);
     const image_B = image_Bba;
@@ -389,11 +401,17 @@ export class WorkerPoolAlignWorker implements DoTransferableWorkUnit<IImageAlign
     if (res1 && res2 && res3 && res4) {
       let mat1 = cv.matFromArray(points1.length / 2, 1, cv.CV_32FC2, points1);
       let mat2 = cv.matFromArray(points2.length / 2, 1, cv.CV_32FC2, points2);
-
-      let h = cv.findHomography(mat1, mat2, cv.RANSAC);
-
       let image_B_final_result = im1;
-      cv.warpPerspective(image_B_final_result, image_B_final_result, h, im2.size());
+
+      if (warpPerspective) {
+        const h = cv.findHomography(mat1, mat2, cv.RANSAC);
+        cv.warpPerspective(image_B_final_result, image_B_final_result, h, im2.size());
+        h.delete();
+      } else {
+        const h = cv.estimateAffine2D(mat1, mat2);
+        cv.warpAffine(image_B_final_result, image_B_final_result, h, im2.size(), cv.INTER_LINEAR, cv.BORDER_CONSTANT, new cv.Scalar());
+        h.delete();
+      }
 
       if (debug) {
         let matVec = new cv.MatVector();
@@ -425,7 +443,6 @@ export class WorkerPoolAlignWorker implements DoTransferableWorkUnit<IImageAlign
 
       mat1.delete();
       mat2.delete();
-      h.delete();
       image_Bba.data.set([]);
     } else {
       if (debug) {
@@ -659,6 +676,7 @@ export class WorkerPoolAlignWorker implements DoTransferableWorkUnit<IImageAlign
     heightA: number,
     preference: IPreference,
     debug: boolean,
+    warpPerspective: boolean,
   ): any {
     //im2 is the original reference image we are trying to align to
     const imageA = new ImageData(new Uint8ClampedArray(image_Aba), widthA, heightA);
@@ -674,7 +692,6 @@ export class WorkerPoolAlignWorker implements DoTransferableWorkUnit<IImageAlign
     //  cv.HoughCircles(srcMat, circlesMat, cv.HOUGH_GRADIENT, 1, 45, 75, 40, 0, 0);
     let minCircle = (srcMat.cols * preference.minCircle) / 1000;
     let maxCircle = (srcMat.cols * preference.maxCircle) / 1000;
-
     cv.HoughCircles(srcMat, circlesMat, cv.HOUGH_GRADIENT, 1, 45, 75, 20, minCircle, maxCircle);
     let x1, y1, r1;
     let x2, y2, r2;
@@ -705,19 +722,16 @@ export class WorkerPoolAlignWorker implements DoTransferableWorkUnit<IImageAlign
         if (x * x + y * y <= x1 * x1 + y1 * y1) {
           x1 = x;
           y1 = y;
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
           r1 = radius;
         }
         if (x * x + y * y >= x4 * x4 + y4 * y4) {
           x4 = x;
           y4 = y;
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
           r4 = radius;
         }
         if ((srcMWidth - x) * (srcMWidth - x) + y * y <= (srcMWidth - x2) * (srcMWidth - x2) + y2 * y2) {
           x2 = x;
           y2 = y;
-          // eslint-disable-next-line @typescript-eslint/no-unused-vars
           r2 = radius;
         }
         if (x * x + (srcMHeight - y) * (srcMHeight - y) <= x3 * x3 + (srcMHeight - y3) * (srcMHeight - y3)) {
@@ -745,8 +759,13 @@ export class WorkerPoolAlignWorker implements DoTransferableWorkUnit<IImageAlign
     cv.cvtColor(srcMat2, srcMat1, cv.COLOR_RGBA2GRAY);
     const srcMWidth1 = srcMat1.size().width;
     const srcMHeight1 = srcMat1.size().height;
-    //  cv.HoughCircles(srcMat, circlesMat, cv.HOUGH_GRADIENT, 1, 45, 75, 40, 0, 0);
-    cv.HoughCircles(srcMat1, circlesMat1, cv.HOUGH_GRADIENT, 1, 45, 75, 15, r3 - 3, r3 + 3);
+
+    let min = Math.trunc(r3 * 0.8);
+    if (min === 0) {
+      min = 1;
+    }
+    const max = Math.trunc(r3 * 1.2);
+    cv.HoughCircles(srcMat1, circlesMat1, cv.HOUGH_GRADIENT, 1, 45, 75, 15, min, max);
     let goodpointsx = [];
     let goodpointsy = [];
     const seuil = ((4 * r3 * r3 - 3.14159 * r3 * r3) * 180) / 100;
@@ -816,21 +835,59 @@ export class WorkerPoolAlignWorker implements DoTransferableWorkUnit<IImageAlign
       }
     }
 
-    if (goodpointsx.length >= 4) {
-      let srcTri = cv.matFromArray(4, 1, cv.CV_32FC2, [x1, y1, x2, y2, x3, y3, x4, y4]);
-      let dstTri = cv.matFromArray(4, 1, cv.CV_32FC2, [x5, y5, x6, y6, x7, y7, x8, y8]);
-      let M = cv.getPerspectiveTransform(dstTri, srcTri);
+    if (goodpointsx.length >= 3) {
       let dsize = new cv.Size(srcMat.cols, srcMat.rows);
-      for (let i = 0; i < srcTri.rows; ++i) {
+      let dst = new cv.Mat(); ///cv.Mat.zeros(srcMat.rows, srcMat.cols, cv.CV_8U);
+      let srcTri = undefined;
+      let dstTri = undefined;
+      if (goodpointsx.length === 3) {
+        const d1 = x5 * x5 + y5 * y5;
+        const d2 = (srcMWidth1 - x6) * (srcMWidth1 - x6) + y6 * y6;
+        const d3 = (srcMHeight1 - y7) * (srcMHeight1 - y7) + x7 * x7;
+        const d4 = (srcMHeight1 - y8) * (srcMHeight1 - y8) + (srcMWidth1 - x8) * (srcMWidth1 - x8);
+
+        if (Math.max(d1, d2, d3, d4) === d3) {
+          srcTri = cv.matFromArray(3, 1, cv.CV_32FC2, [x1, y1, x2, y2, x4, y4]);
+          dstTri = cv.matFromArray(3, 1, cv.CV_32FC2, [x5, y5, x6, y6, x8, y8]);
+        } else if (Math.max(d1, d2, d3, d4) === d2) {
+          srcTri = cv.matFromArray(3, 1, cv.CV_32FC2, [x1, y1, x3, y3, x4, y4]);
+          dstTri = cv.matFromArray(3, 1, cv.CV_32FC2, [x5, y5, x7, y7, x8, y8]);
+        } else if (Math.max(d1, d2, d3, d4) === d1) {
+          srcTri = cv.matFromArray(3, 1, cv.CV_32FC2, [x2, y2, x3, y3, x4, y4]);
+          dstTri = cv.matFromArray(3, 1, cv.CV_32FC2, [x6, y6, x7, y7, x8, y8]);
+        } else {
+          srcTri = cv.matFromArray(3, 1, cv.CV_32FC2, [x1, y1, x2, y2, x3, y3]);
+          dstTri = cv.matFromArray(3, 1, cv.CV_32FC2, [x5, y5, x6, y6, x7, y7]);
+        }
+
+        // const M = cv.getAffineTransform(srcTri, dstTri);
+        const M = cv.estimateAffine2D(srcTri, dstTri);
+        cv.warpAffine(srcMat2, dst, M, dsize, cv.INTER_LINEAR, cv.BORDER_CONSTANT, new cv.Scalar());
+        M.delete();
+      } else if (goodpointsx.length >= 4) {
+        srcTri = cv.matFromArray(4, 1, cv.CV_32FC2, [x1, y1, x2, y2, x3, y3, x4, y4]);
+        dstTri = cv.matFromArray(4, 1, cv.CV_32FC2, [x5, y5, x6, y6, x7, y7, x8, y8]);
+
+        if (warpPerspective) {
+          const M = cv.getPerspectiveTransform(dstTri, srcTri);
+          cv.warpPerspective(srcMat2, dst, M, dsize, cv.INTER_LINEAR, cv.BORDER_CONSTANT, new cv.Scalar());
+          M.delete();
+        } else {
+          const M = cv.estimateAffine2D(dstTri, srcTri);
+          cv.warpAffine(srcMat2, dst, M, dsize, cv.INTER_LINEAR, cv.BORDER_CONSTANT, new cv.Scalar());
+          M.delete();
+        }
+      }
+
+      //        let srcTri = cv.matFromArray(3, 1, cv.CV_32FC2, [x1, y1, x2, y2, x3, y3]);
+      //        let dstTri = cv.matFromArray(3, 1, cv.CV_32FC2, [x5, y5, x6, y6, x7, y7]);
+      /*    for (let i = 0; i < srcTri.rows; ++i) {
         const xx = dstTri.data32F[i * 2];
         const yy = dstTri.data32F[i * 2 + 1];
         let radius = 15;
         let center = new cv.Point(xx, yy);
         cv.circle(srcMat2, center, radius, [0, 0, 255, 255], 1);
-      }
-      let dst = srcMat2; // new cv.Mat(); ///cv.Mat.zeros(srcMat.rows, srcMat.cols, cv.CV_8U);
-
-      cv.warpPerspective(srcMat2, dst, M, dsize, cv.INTER_LINEAR, cv.BORDER_CONSTANT, new cv.Scalar());
+      }*/
 
       let result = {} as any;
 
@@ -885,7 +942,8 @@ export class WorkerPoolAlignWorker implements DoTransferableWorkUnit<IImageAlign
       circlesMat1.delete();
       srcTri.delete();
       dstTri.delete();
-      M.delete();
+      //      dst.delete();
+      srcMat2.delete();
 
       return result;
     } else {
@@ -907,6 +965,7 @@ export class WorkerPoolAlignWorker implements DoTransferableWorkUnit<IImageAlign
         preference.numberofpointToMatch,
         preference.numberofgoodpointToMatch,
         debug,
+        warpPerspective,
       );
     }
   }
