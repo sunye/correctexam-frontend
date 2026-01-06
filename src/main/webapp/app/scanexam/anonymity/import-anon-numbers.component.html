@@ -1,0 +1,59 @@
+<div class="grid-nogutter">
+  <p-toast></p-toast>
+
+  <p-blockUI [blocked]="blocked">
+    <p-progressSpinner></p-progressSpinner>
+  </p-blockUI>
+
+  <div class="col-12">
+    <div class="grid grid-nogutter align-items-center">
+      <div class="col-8">
+        <h2>{{ 'scanexam.anonymity.importNumbersTitle' | translate }}</h2>
+      </div>
+
+      <div class="col-4 flex flex-row-reverse">
+        <button type="button" class="p-button p-button-primary" [disabled]="!examId" (click)="gotoExam()">
+          <i class="pi pi-arrow-left"></i>&nbsp;
+          <span>Retourner à l'exam</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="grid flex">
+      <div class="sm:col-12 md:col-6 lg:col-6 xl:col-6">
+        <p-message severity="info" [text]="'scanexam.anonymity.importNumbersHelp' | translate"></p-message>
+      </div>
+
+      <div class="sm:col-12 md:col-6 lg:col-6 xl:col-6">
+        <div class="md:flex lg:flex xl:flex md:flex-row-reverse lg:flex-row-reverse">
+          <p-fileUpload
+            #fileUpload
+            mode="basic"
+            auto="true"
+            chooseIcon="pi pi-upload"
+            uploadIcon="pi pi-arrow-up"
+            [customUpload]="true"
+            accept=".txt,.csv,text/plain,text/csv"
+            multiple="false"
+            chooseLabel="Choisir un fichier"
+            (uploadHandler)="importFromFile($event, fileUpload)"
+          ></p-fileUpload>
+
+          <p-button
+            class="ml-2"
+            icon="pi pi-send"
+            label="Importer"
+            [disabled]="!rawText || rawText.trim().length === 0"
+            (onClick)="importFromTextarea()"
+          ></p-button>
+        </div>
+      </div>
+
+      <div class="sm:col-12 md:col-12 lg:col-12 xl:col-12">
+        <label>{{ 'scanexam.anonymity.pasteHere' | translate }}</label>
+
+        <textarea [(ngModel)]="rawText" rows="10" style="width: 100%; padding: 0.5rem; resize: vertical"></textarea>
+      </div>
+    </div>
+  </div>
+</div>
