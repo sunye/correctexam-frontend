@@ -216,6 +216,86 @@
             ><BR />
             <span [translate]="'scanexam.showresult'"> Voir résultats</span>
           </button>
+
+          <button
+            [routerLink]="'/exam/importAnonNumbers/' + this.examId"
+            [style]="{ marginBottom: '1em', margin: '1em' }"
+            class="p-element p-ripple button80"
+            pButton
+            pRipple
+            type="button"
+            [tooltipZIndex]="'3000'"
+            [pTooltip]="'scanexam.anonymity.importNumbersTooltip' | translate"
+            tooltipPosition="top"
+            [disabled]="blocked"
+          >
+            <fa-stack>
+              <fa-icon [icon]="farCircle" stackItemSize="2x"></fa-icon>
+              <fa-icon [icon]="faHashtag" stackItemSize="1x" [inverse]="false"></fa-icon>
+            </fa-stack>
+            <br />
+            <span [translate]="'scanexam.anonymity.importNumbersTitle'">Importer numéros anonymat</span>
+          </button>
+
+          <button
+            [routerLink]="['/exam/associateAnon', this.examId, 1]"
+            [style]="{ marginBottom: '1em', margin: '1em' }"
+            class="p-element p-ripple button80"
+            pButton
+            pRipple
+            type="button"
+            [tooltipZIndex]="'3000'"
+            [pTooltip]="'scanexam.anonymity.associateTooltip' | translate"
+            tooltipPosition="top"
+            [disabled]="blocked"
+          >
+            <fa-stack>
+              <fa-icon [icon]="farCircle" stackItemSize="2x"></fa-icon>
+              <fa-icon [icon]="faLink" stackItemSize="1x" [inverse]="false"></fa-icon>
+            </fa-stack>
+            <br />
+            <span [translate]="'scanexam.anonymity.associateTitle'">Associer copies/anonymat</span>
+          </button>
+
+          <button
+            [routerLink]="'/exam/importJuryMapping/' + this.examId"
+            [style]="{ marginBottom: '1em', margin: '1em' }"
+            class="p-element p-ripple button80"
+            pButton
+            pRipple
+            type="button"
+            [tooltipZIndex]="'3000'"
+            [pTooltip]="'scanexam.jury.tooltip' | translate"
+            tooltipPosition="top"
+            [disabled]="blocked"
+          >
+            <fa-stack>
+              <fa-icon [icon]="farCircle" stackItemSize="2x"></fa-icon>
+              <fa-icon [icon]="faGavel" stackItemSize="1x" [inverse]="false"></fa-icon>
+            </fa-stack>
+            <br />
+            <span [translate]="'scanexam.jury.title'">Jury</span>
+          </button>
+
+          <button
+            [routerLink]="'/exam/exportGradesAnon/' + this.examId"
+            [style]="{ marginBottom: '1em', margin: '1em' }"
+            class="p-element p-ripple button80"
+            pButton
+            pRipple
+            type="button"
+            [tooltipZIndex]="'3000'"
+            [pTooltip]="'scanexam.anonymity.exportTooltip' | translate"
+            tooltipPosition="top"
+            [disabled]="blocked"
+          >
+            <fa-stack>
+              <fa-icon [icon]="farCircle" stackItemSize="2x"></fa-icon>
+              <fa-icon [icon]="faFileExport" stackItemSize="1x" [inverse]="false"></fa-icon>
+            </fa-stack>
+            <br />
+            <span [translate]="'scanexam.anonymity.exportTitle'">Exporter anonymat</span>
+          </button>
         </div>
       </div>
     </div>

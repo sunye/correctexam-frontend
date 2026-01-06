@@ -1,14 +1,20 @@
 import { Component, OnInit } from '@angular/core';
 import { faCircle as farCircle } from '@fortawesome/free-regular-svg-icons';
-import { faMotorcycle as fasMotorcycle } from '@fortawesome/free-solid-svg-icons';
-import { faGraduationCap as faGraduationCap } from '@fortawesome/free-solid-svg-icons';
-import { faBookOpenReader as faBookOpenReader } from '@fortawesome/free-solid-svg-icons';
-import { faCloudArrowUp as faCloudArrowUp } from '@fortawesome/free-solid-svg-icons';
-import { faDiagramPredecessor as faDiagramPredecessor } from '@fortawesome/free-solid-svg-icons';
-import { faPersonArrowDownToLine as faPersonArrowDownToLine } from '@fortawesome/free-solid-svg-icons';
-import { faSquarePollVertical as faSquarePollVertical } from '@fortawesome/free-solid-svg-icons';
+import {
+  faMotorcycle as fasMotorcycle,
+  faGraduationCap as faGraduationCap,
+  faBookOpenReader as faBookOpenReader,
+  faCloudArrowUp as faCloudArrowUp,
+  faDiagramPredecessor as faDiagramPredecessor,
+  faPersonArrowDownToLine as faPersonArrowDownToLine,
+  faSquarePollVertical as faSquarePollVertical,
+  faPenToSquare as faPenToSquare,
+  faHashtag,
+  faLink,
+  faGavel,
+  faFileExport,
+} from '@fortawesome/free-solid-svg-icons';
 
-import { faPenToSquare as faPenToSquare } from '@fortawesome/free-solid-svg-icons';
 import { CourseService } from '../../entities/course/service/course.service';
 import { ICourse } from '../../entities/course/course.model';
 import { IExam } from '../../entities/exam/exam.model';
@@ -68,6 +74,7 @@ import { ToastModule } from 'primeng/toast';
 })
 export class ExamDetailComponent implements OnInit, CacheUploadNotification, CacheDownloadNotification {
   blocked = false;
+
   farCircle = farCircle as IconProp;
   fasMotorcycle = fasMotorcycle as IconProp;
   faGraduationCap = faGraduationCap as IconProp;
@@ -77,6 +84,11 @@ export class ExamDetailComponent implements OnInit, CacheUploadNotification, Cac
   faSquarePollVertical = faSquarePollVertical as IconProp;
   faPersonArrowDownToLine = faPersonArrowDownToLine as IconProp;
   faPenToSquare = faPenToSquare as IconProp;
+  faHashtag = faHashtag as IconProp;
+  faLink = faLink as IconProp;
+  faGavel = faGavel as IconProp;
+  faFileExport = faFileExport as IconProp;
+
   examId = '';
   exam: IExam | undefined;
   course: ICourse | undefined;
@@ -117,6 +129,7 @@ export class ExamDetailComponent implements OnInit, CacheUploadNotification, Cac
     private preferenceService: PreferenceService,
     private titleService: Title,
   ) {}
+
   setShowAlignement(v: boolean): void {
     this.showAlignement = v;
   }
