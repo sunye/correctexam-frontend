@@ -1,0 +1,289 @@
+<div class="grid">
+  <p-toast></p-toast>
+
+  <p-blockUI [blocked]="blocked">
+    <p-progressSpinner></p-progressSpinner>
+    <!-- <i class="pi pi-lock" style="font-size: 3rem"></i> -->
+  </p-blockUI>
+
+  <p-galleria
+    id="galleria"
+    [value]="images"
+    [(visible)]="displayBasic"
+    [responsiveOptions]="responsiveOptions2"
+    [circular]="true"
+    [fullScreen]="true"
+    [showItemNavigators]="true"
+    [baseZIndex]="100000"
+    [showThumbnails]="false"
+    [containerStyle]="{ 'max-height': '90vh' }"
+    [numVisible]="7"
+    [(activeIndex)]="activeIndex"
+    appendTo="body"
+  >
+    <ng-template pTemplate="item" let-item>
+      <div
+        id="item"
+        class="grid grid-nogutter justify-content-center"
+        style="overflow-x: hidden; overflow-y: scroll; border: #000000 1px solid; height: 96vh; width: 90vw"
+      >
+        <img [src]="item.src" style="display: block" />
+      </div>
+    </ng-template>
+  </p-galleria>
+
+  <ng-keyboard-shortcuts [shortcuts]="shortcuts"></ng-keyboard-shortcuts>
+
+  <p-drawer [(visible)]="layoutsidebarVisible">
+    <h3 [translate]="'scanexam.layoutoptions'"></h3>
+
+    <div style="padding-bottom: 1rem" class="col-12 sm:col-12 md:col-12 lg:col-12 xl:col-12">
+      <label [translate]="'scanexam.removealignement'"></label>
+      <p-toggleSwitch
+        [(ngModel)]="noalign"
+        (onChange)="loadImage()"
+        [pTooltip]="'scanexam.removealignementTooltip' | translate"
+        [tooltipZIndex]="'3000'"
+        [tooltipPosition]="'right'"
+      ></p-toggleSwitch>
+    </div>
+
+    <div style="padding-bottom: 1rem" class="col-12 sm:col-12 md:col-12 lg:col-12 xl:col-12">
+      <label [translate]="'scanexam.debug'"></label>
+      <p-toggleSwitch
+        [(ngModel)]="debug"
+        (onChange)="loadImage()"
+        [pTooltip]="'scanexam.debugTooltip' | translate"
+        [tooltipZIndex]="'3000'"
+        [tooltipPosition]="'right'"
+      ></p-toggleSwitch>
+    </div>
+
+    <div style="padding-bottom: 1rem" class="col-12 sm:col-12 md:col-12 lg:col-12 xl:col-12">
+      <label>
+        <span [translate]="'scanexam.zoomfactor'"></span>
+        {{ factor }}
+      </label>
+      <p-slider
+        [ngModel]="factor"
+        [min]="1"
+        [max]="2"
+        [step]="0.1"
+        (onChange)="reloadImageGrowFactor($event)"
+        [pTooltip]="'scanexam.factorTooltip' | translate"
+        [tooltipZIndex]="'3000'"
+        [tooltipPosition]="'right'"
+      ></p-slider>
+    </div>
+
+    <div style="padding-bottom: 1rem" class="col-12 sm:col-12 md:col-12 lg:col-12 xl:col-12">
+      <button
+        pButton
+        [pTooltip]="'scanexam.removeallbindingtooltip' | translate"
+        [tooltipZIndex]="'3000'"
+        [tooltipPosition]="'right'"
+        (click)="resetAllAnonBindings()"
+      >
+        Remove all binding
+      </button>
+    </div>
+  </p-drawer>
+
+  <div class="col-12 p-0">
+    <p-progressBar [value]="remainingFree()" [showValue]="false" [style]="{ height: '6px' }"></p-progressBar>
+  </div>
+
+  <div class="col-12">
+    <div class="grid grid-nogutter">
+      <div class="col-8">
+        <h2 id="jhi-course-heading" data-cy="CourseCreateUpdateHeading">Associer INE / Numéro anonymat</h2>
+      </div>
+
+      <div class="col-4 flex flex-row-reverse">
+        <button [disabled]="!examId" type="submit" class="p-button p-button-primary" (click)="gotoExam()">
+          <fa-icon icon="arrow-left"></fa-icon>&nbsp;<span>Retourner à l'exam</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="col-12 md:col-12">
+      <div class="grid">
+        <div class="col-1">
+          <p-button
+            class="sm:text-xs md:text-xs lg:text-base"
+            styleClass="md:text-xs sm:p-button-sm md:p-button-sm lg:p-button"
+            (click)="layoutsidebarVisible = true"
+            icon="pi pi-cog"
+            [pTooltip]="'scanexam.showLayoutOptionsTooltip' | translate"
+            [tooltipPosition]="'right'"
+            [disabled]="blocked"
+          ></p-button>
+        </div>
+
+        <div class="col-10 d-flex justify-content-center">
+          <div>
+            <span>Copie courante:</span>
+            <span style="font-weight: 600"> {{ currentStudent + 1 }} </span>
+            <span>/ {{ totalCopies }}</span>
+
+            <br />
+
+            <span>INE détecté:</span>
+            <span style="font-weight: 600"> {{ currentIne || '—' }} </span>
+
+            <br />
+
+            <span>Numéro anonymat sélectionné:</span>
+            <span style="font-weight: 600"> {{ currentAnon?.anonymousNumber || '—' }} </span>
+
+            @if (currentAnon?.sheetId) {
+              <span style="margin-left: 0.5rem" class="text-orange-400">(déjà assigné)</span>
+            }
+          </div>
+        </div>
+
+        <div class="col-1"></div>
+      </div>
+
+      <div class="grid">
+        <div class="col-3"></div>
+
+        <div class="col-6">
+          <div class="d-flex justify-content-center">
+            <button
+              pButton
+              [pTooltip]="'scanexam.gotopreviousnonboundsheet' | translate"
+              [tooltipZIndex]="'3000'"
+              [tooltipPosition]="'bottom'"
+              (click)="previousStudent()"
+              class="p-button"
+              [disabled]="blocked"
+            >
+              <fa-icon icon="arrow-left"></fa-icon>
+            </button>
+
+            <p-paginator
+              [rows]="1"
+              [first]="currentStudent"
+              [totalRecords]="totalCopies"
+              (onPageChange)="onPageChange($event)"
+              [showJumpToPageDropdown]="true"
+              [showPageLinks]="false"
+              [pTooltip]="'scanexam.showPaginatorTooltip' | translate"
+              [tooltipPosition]="'bottom'"
+            ></p-paginator>
+
+            <button
+              pButton
+              [pTooltip]="'scanexam.gotonextnonboundsheet' | translate"
+              [tooltipZIndex]="'3000'"
+              [tooltipPosition]="'bottom'"
+              (click)="nextStudent()"
+              class="p-button"
+              [disabled]="blocked"
+            >
+              <fa-icon icon="arrow-right"></fa-icon>
+            </button>
+          </div>
+        </div>
+
+        <div class="col-3">
+          <div class="d-flex justify-content-end">
+            <button pButton (click)="showGalleria()" [pTooltip]="'scanexam.showFullPageTooltip' | translate" [tooltipPosition]="'bottom'">
+              Show full page
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="canvas-wrapper foo">
+        <table [style]="{ 'min-width': '60rem' }">
+          <tr>
+            @if (ineImageImg) {
+              <td [style]="columnstyle"><img style="max-width: 100%" [src]="ineImageImg" /></td>
+            }
+            @if (debug && ineImageImgDebug) {
+              <td [style]="columnstyle"><img style="max-width: 100%" [src]="ineImageImgDebug" /></td>
+            }
+          </tr>
+        </table>
+      </div>
+
+      <div class="grid align-items-center">
+        <div class="col-3">
+          <label>Filtrer les anonymats déjà affectés: </label>
+          <p-toggleSwitch
+            [(ngModel)]="filterAssignedAnon"
+            (onChange)="refreshAnonListLocal()"
+            [pTooltip]="'scanexam.filterboundstudentTooltip' | translate"
+          ></p-toggleSwitch>
+        </div>
+
+        <div class="col-6 d-flex justify-content-center">
+          <button
+            pButton
+            class="p-button-success"
+            [disabled]="blocked || !currentAnon || !currentSheetId"
+            (click)="bindAnonToCurrentSheet(true)"
+            [pTooltip]="'Associer puis Next'"
+            [tooltipZIndex]="'3000'"
+            [tooltipPosition]="'bottom'"
+          >
+            Associer + Next
+          </button>
+
+          <button
+            style="margin-left: 0.5rem"
+            pButton
+            class="p-button"
+            [disabled]="blocked || !currentAnon || !currentSheetId"
+            (click)="bindAnonToCurrentSheet(false)"
+            [pTooltip]="'Associer sans avancer'"
+            [tooltipZIndex]="'3000'"
+            [tooltipPosition]="'bottom'"
+          >
+            Associer
+          </button>
+        </div>
+
+        <div class="col-3"></div>
+      </div>
+
+      <p-listbox
+        #list
+        [options]="anonOptions"
+        [(ngModel)]="currentAnon"
+        [filter]="true"
+        [multiple]="false"
+        [optionLabel]="'label'"
+        [metaKeySelection]="false"
+        [optionValue]="'value'"
+        (ngModelChange)="onAnonSelected($event)"
+      >
+        <ng-template let-table pTemplate="item">
+          <div class="col-12" style="width: '100%'">
+            <div class="flex flex-row m-0 p-0">
+              <div class="flex-grow-1 flex-shrink-1 flex align-items-center justify-content-left border-round m-0 p-0">
+                <span style="float: left" [ngClass]="anonColor(table)">
+                  {{ table.label }}
+                </span>
+              </div>
+
+              <div class="flex-grow-1 flex-shrink-1 flex align-items-end justify-content-end border-round m-0 p-0">
+                <button
+                  pButton
+                  (click)="selectAnonAndBind(table.value)"
+                  [pTooltip]="'Associer puis Next'"
+                  [tooltipZIndex]="'3000'"
+                  [tooltipPosition]="'left'"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          </div>
+        </ng-template>
+      </p-listbox>
+    </div>
+  </div>
+</div>
