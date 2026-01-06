@@ -1,0 +1,40 @@
+{
+  "scanexam": {
+    "layoutoptions": "Options d’affichage",
+    "showLayoutOptionsTooltip": "Afficher les options d’affichage",
+    "removealignement": "Supprimer l’alignement",
+    "removealignementTooltip": "Afficher le scan non aligné au lieu du scan aligné",
+    "debug": "Debug",
+    "debugTooltip": "Activer le mode debug (afficher des images de diagnostic)",
+    "zoomfactor": "Facteur d’agrandissement",
+    "factorTooltip": "Modifier le facteur de zoom utilisé pour la détection",
+
+    "removeallbindingtooltip": "Supprimer toutes les liaisons (réinitialiser les associations d’anonymat)",
+    "filterboundstudentTooltip": "Masquer les anonymats déjà affectés",
+    "showPaginatorTooltip": "Aller directement à une copie",
+    "gotopreviousnonboundsheet": "Aller à la copie précédente",
+    "gotonextnonboundsheet": "Aller à la copie suivante",
+    "showFullPageTooltip": "Afficher la page scannée en plein écran",
+
+    "anonymity": {
+      "importNumbersTitle": "Importer les numéros d’anonymat",
+      "importNumbersTooltip": "Importer la liste des numéros d’anonymat pour l’examen",
+      "importNumbersHelp": "Importer les numéros d’anonymat depuis un fichier CSV/TXT ou les coller ci-dessous.",
+      "pasteHere": "Ou coller ici",
+
+      "associateTitle": "Associer copies et anonymat",
+      "associateTooltip": "Associer une copie/un étudiant à un numéro d’anonymat",
+
+      "juryTitle": "Importer la correspondance du jury",
+      "juryHelp": "Importer un CSV : colonnes anonymousNumber;ine (ou deux colonnes sans en-tête).",
+
+      "exportTitle": "Exporter les notes anonymisées",
+      "exportTooltip": "Exporter les notes en conservant l’anonymat"
+    },
+
+    "jury": {
+      "title": "Associer anonymat et étudiant",
+      "tooltip": "Importer le fichier de correspondance jury pour l’anonymat"
+    }
+  }
+}

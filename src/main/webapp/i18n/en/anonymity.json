@@ -1,0 +1,40 @@
+{
+  "scanexam": {
+    "layoutoptions": "Layout options",
+    "showLayoutOptionsTooltip": "Show layout options",
+    "removealignement": "Remove alignment",
+    "removealignementTooltip": "Display the unaligned scan instead of the aligned scan",
+    "debug": "Debug",
+    "debugTooltip": "Enable debug mode (show extra diagnostic images)",
+    "zoomfactor": "Zoom factor",
+    "factorTooltip": "Change the zoom factor used for the detection",
+
+    "removeallbindingtooltip": "Remove all bindings (reset anonymity associations)",
+    "filterboundstudentTooltip": "Hide already assigned anonymity numbers",
+    "showPaginatorTooltip": "Jump to a specific copy",
+    "gotopreviousnonboundsheet": "Go to previous copy",
+    "gotonextnonboundsheet": "Go to next copy",
+    "showFullPageTooltip": "Show the full scanned page",
+
+    "anonymity": {
+      "importNumbersTitle": "Import anonymity numbers",
+      "importNumbersTooltip": "Import the list of anonymity numbers for this exam",
+      "importNumbersHelp": "Import anonymity numbers from a CSV/TXT file or paste them below.",
+      "pasteHere": "Or paste here",
+
+      "associateTitle": "Associate copies and anonymity",
+      "associateTooltip": "Associate a student/copy with an anonymity number",
+
+      "juryTitle": "Import jury mapping",
+      "juryHelp": "Import a CSV: columns anonymousNumber;ine (or two columns without header).",
+
+      "exportTitle": "Export anonymized grades",
+      "exportTooltip": "Export grades while keeping anonymity"
+    },
+
+    "jury": {
+      "title": "Associate anonymity number with student",
+      "tooltip": "Import jury mapping file for anonymity"
+    }
+  }
+}
