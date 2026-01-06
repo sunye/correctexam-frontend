@@ -23,6 +23,11 @@ import { ExportanonymoupdfComponent } from './exportanonymoupdf/exportanonymoupd
 import { CreerexamComponentNbGrader } from './creerexamnbgrader/creerexamnbgrader.component';
 import { AssocierNbgraderComponent } from './associer-copies-etudiants/associer-nbgrader/associer-nbgrader.component';
 
+import { ImportAnonNumbersComponent } from './anonymity/import-anon-numbers.component';
+import { AssociateAnonComponent } from './anonymity/associate-anon.component';
+import { ImportJuryMappingComponent } from './anonymity/import-jury-mapping.component';
+import { ExportGradesAnonComponent } from './anonymity/export-grades-anon.component';
+
 // set the location of the OpenCV files
 // registerAllModules();
 
@@ -437,6 +442,34 @@ export const CompareAnswer_ROUTE: Route = {
   },
 };
 
+export const IMPORT_ANON_NUMBERS_ROUTE: Route = {
+  path: 'exam/importAnonNumbers/:examid',
+  canActivate: [UserRouteAccessService],
+  component: ImportAnonNumbersComponent,
+  data: { authorities: ['ROLE_USER'], pageTitle: 'scanexam.anonymity.importNumbersTitle' },
+};
+
+export const ASSOCIATE_ANON_ROUTE: Route = {
+  path: 'exam/associateAnon/:examid/:currentStudent',
+  canActivate: [UserRouteAccessService],
+  component: AssociateAnonComponent,
+  data: { authorities: ['ROLE_USER'], pageTitle: 'scanexam.anonymity.associateTitle' },
+};
+
+export const IMPORT_JURY_MAPPING_ROUTE: Route = {
+  path: 'exam/importJuryMapping/:examid',
+  canActivate: [UserRouteAccessService],
+  component: ImportJuryMappingComponent,
+  data: { authorities: ['ROLE_USER'], pageTitle: 'scanexam.anonymity.juryTitle' },
+};
+
+export const EXPORT_GRADES_ANON_ROUTE: Route = {
+  path: 'exam/exportGradesAnon/:examid',
+  canActivate: [UserRouteAccessService],
+  component: ExportGradesAnonComponent,
+  data: { authorities: ['ROLE_USER'], pageTitle: 'scanexam.anonymity.exportTitle' },
+};
+
 export const SCANEXAM_ROUTES = [
   CREERCOURS_ROUTE,
   COURSMAIN_ROUTE,
@@ -466,4 +499,8 @@ export const SCANEXAM_ROUTES = [
   CompareHybridCommentAnswer_ROUTE,
   AssocierNbgrader_ROUTE,
   AssocierNbgraderToStudent_ROUTE,
+  IMPORT_ANON_NUMBERS_ROUTE,
+  ASSOCIATE_ANON_ROUTE,
+  IMPORT_JURY_MAPPING_ROUTE,
+  EXPORT_GRADES_ANON_ROUTE,
 ];
