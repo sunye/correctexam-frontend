@@ -1,0 +1,77 @@
+<p-toast></p-toast>
+
+<p-blockUI [blocked]="blocked()"></p-blockUI>
+
+<div class="col-12">
+  <div class="grid grid-nogutter align-items-center">
+    <div class="col-8">
+      <h2>{{ 'scanexam.anonymity.juryTitle' | translate }}</h2>
+    </div>
+
+    <div class="col-4 flex flex-row-reverse">
+      <button [disabled]="!examId" type="button" class="p-button p-button-primary" (click)="gotoExam()">
+        <i class="pi pi-arrow-left"></i>&nbsp;<span>Retourner à l'exam</span>
+      </button>
+    </div>
+  </div>
+
+  <p class="mb-3">
+    {{ 'scanexam.anonymity.juryHelp' | translate }}
+  </p>
+
+  <div class="mb-3 flex flex-wrap align-items-center">
+    <p-fileUpload
+      mode="basic"
+      chooseLabel="Importer un CSV"
+      [customUpload]="true"
+      (uploadHandler)="loadFromFile($event)"
+      [disabled]="blocked()"
+    ></p-fileUpload>
+
+    <p-button class="ml-2" icon="pi pi-plus" label="Ajouter une ligne" (onClick)="addRow()" [disabled]="blocked()"></p-button>
+
+    <p-button
+      class="ml-2"
+      styleClass="p-button-success"
+      icon="pi pi-send"
+      label="Envoyer"
+      (onClick)="send()"
+      [disabled]="blocked() || rows.length === 0"
+    ></p-button>
+  </div>
+
+  <p-table [value]="rows" [paginator]="true" [rows]="25" [rowsPerPageOptions]="[10, 25, 50, 100]" [showCurrentPageReport]="true">
+    <ng-template pTemplate="header">
+      <tr>
+        <th>anonymousNumber</th>
+        <th>ine</th>
+        <th style="width: 1%; white-space: nowrap"></th>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="body" let-r let-i="rowIndex">
+      <tr>
+        <td>
+          <input pInputText [(ngModel)]="r.anonymousNumber" [disabled]="blocked()" />
+        </td>
+        <td>
+          <input pInputText [(ngModel)]="r.ine" [disabled]="blocked()" />
+        </td>
+        <td>
+          <p-button
+            icon="pi pi-trash"
+            styleClass="p-button-danger p-button-text"
+            (onClick)="removeRow(i)"
+            [disabled]="blocked()"
+          ></p-button>
+        </td>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="3">Aucune donnée</td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>
